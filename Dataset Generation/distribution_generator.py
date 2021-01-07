@@ -62,7 +62,7 @@ np.savetxt(filename, corr_scaled, fmt="%f", delimiter=",")
 
 plt.figure()
 plt.title("Correlated")
-plt.scatter(corr_scaled[0], corr_scaled[1])
+plt.scatter(corr_scaled[:, 0], corr_scaled[:, 1])
 
 ############################ Creating dataset with anticorrelated distribution ############################
 
