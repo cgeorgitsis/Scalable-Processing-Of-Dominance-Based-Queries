@@ -1,26 +1,19 @@
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.log4j._
-
 import scala.collection.mutable.ArrayBuffer
 import skyline.SkylineOperator
 import topk.{DominanceScore, PointWithDomScore, STD_Algorithm}
 
-import scala.util.control.Breaks
 
 object Driver {
   def main(args: Array[String]): Unit = {
 
-    Logger.getLogger("org.apache.spark.SparkContext").setLevel(Level.WARN)
-
-    val conf = new SparkConf().setAppName("Dominance-Based Queries").setMaster("local[8]")
+    val conf = new SparkConf().setAppName("Dominance-Based Queries").setMaster("local[4]")
     val sc = new SparkContext(conf)
 
     val inputFile = "./small.csv"
     val data = sc.textFile(inputFile)
       .repartition(8).map(_.split(",")).map(p => p.map(_.toDouble))
 
-
-    println("Rdd size: "+ data.partitions.length)
     print("Welcome! \n")
     println("Which task do you want to perform? ")
 
@@ -29,14 +22,13 @@ object Driver {
     println("2 for Top-k Dominating Points")
     println("3 for Top-k Dominating Points from Skyline")
 
-
     val task = scala.io.StdIn.readLine().toInt
     val start = System.nanoTime()
     val skylineObj = new SkylineOperator()
     task match {
 
-      case 1 =>  // compute skyline of each partition
-
+      case 1 =>
+        // compute skyline of each partition
         val localSkylines = data.mapPartitions(skylineObj.SFS_Algorithm)
         val finalSkylineSet: ArrayBuffer[Array[Double]] = ArrayBuffer[Array[Double]]()
         // compute final skyline set
@@ -53,15 +45,17 @@ object Driver {
         println(f"Top-$k%d Points are: ")
         top_k_Points.foreach(point => println(point.mkString("{",",","}")))
 
-      case 3 => // Compute the top-k points of the skyline
-        var k = 5
+      case 3 => // Compute the top-k points that belong to the skyline
+        val k = 10
         val localSkylines = data.mapPartitions(skylineObj.SFS_Algorithm)
         val finalSkylineSet: ArrayBuffer[Array[Double]] = ArrayBuffer[Array[Double]]()
         // compute final skyline set
         localSkylines.collect.foreach(localSkyline => skylineObj.computeFinalSkyline(finalSkylineSet, ArrayBuffer(localSkyline)))
+
         val dominanceScore = new DominanceScore(sc)
         var top_k_SkylinePoints: ArrayBuffer[PointWithDomScore] = dominanceScore.calculateScore(finalSkylineSet, data)
         top_k_SkylinePoints = top_k_SkylinePoints.sortWith(_.dominanceScore > _.dominanceScore)
+
         println(f"Top-$k%d Points of Skyline are: ")
         top_k_SkylinePoints.take(k).foreach(point =>
           println(point.p.mkString(","),"Dominates",",", point.dominanceScore,",","points"))

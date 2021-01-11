@@ -3,12 +3,10 @@ package topk
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import skyline.{SkylineOperator, domination}
-
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks
 
 class STD_Algorithm(sc: SparkContext, k: Int) extends Serializable {
-
 
   def compute(data: RDD[Array[Double]], skylineObj: SkylineOperator, dominanceScore: DominanceScore): ArrayBuffer[Array[Double]] = {
 
@@ -27,7 +25,6 @@ class STD_Algorithm(sc: SparkContext, k: Int) extends Serializable {
     sortedArray = skylineWithDomScore.sortWith(_.dominanceScore > _.dominanceScore)
     println("Sorted Skyline with dominance: ")
     sortedArray.foreach(point => println(point.p.mkString(","),"Dominates",",", point.dominanceScore,",","points"))
-
 
     val top_k_Points: ArrayBuffer[Array[Double]] = new ArrayBuffer[Array[Double]]()
 
