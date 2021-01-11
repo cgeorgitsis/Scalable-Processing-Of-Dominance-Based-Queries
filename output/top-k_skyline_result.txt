@@ -1,0 +1,5 @@
+------------ Top-5 Points of Skyline are: ------------ 
+Point {0.2,0.2,0.9} with dominance score: 5
+Point {0.3,0.1,0.9} with dominance score: 4
+Point {0.8,0.8,0.1} with dominance score: 2
+Point {0.1,0.9,0.9} with dominance score: 1
