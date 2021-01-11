@@ -1,4 +1,9 @@
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
+import java.nio.file._
+
+import org.apache.spark.sql.{SaveMode, SparkSession}
+
 import scala.collection.mutable.ArrayBuffer
 import skyline.SkylineOperator
 import topk.{DominanceScore, PointWithDomScore, STD_Algorithm}
@@ -9,6 +14,10 @@ object Driver {
 
     val conf = new SparkConf().setAppName("Dominance-Based Queries").setMaster("local[4]")
     val sc = new SparkContext(conf)
+    val ss = SparkSession.builder.getOrCreate()
+    //implicits
+    import ss.implicits._
+
 
     val inputFile = "./small.csv"
     val data = sc.textFile(inputFile)
@@ -56,10 +65,14 @@ object Driver {
         var top_k_SkylinePoints: ArrayBuffer[PointWithDomScore] = dominanceScore.calculateScore(finalSkylineSet, data)
         top_k_SkylinePoints = top_k_SkylinePoints.sortWith(_.dominanceScore > _.dominanceScore)
 
-        println(f"Top-$k%d Points of Skyline are: ")
+        println(f"------------ Top-$k%d Points of Skyline are: ------------")
         top_k_SkylinePoints.take(k).foreach(point =>
-          println(point.p.mkString(","),"Dominates",",", point.dominanceScore,",","points"))
+          println("Point " + point.p.mkString("{",",","}") + " with dominance score: " +  point.dominanceScore))
+        println(f"-------------------------------------------------------")
     }
     println("Total Execution Time: " + (System.nanoTime - start) / 1e9d + "seconds")
+    ss.stop()
+
+
   }
 }
