@@ -8,7 +8,7 @@ import scala.util.control.Breaks
 
 class STD_Algorithm(sc: SparkContext, k: Int) extends Serializable {
 
-  def compute(data: RDD[Array[Double]], skylineObj: SkylineOperator, dominanceScore: DominanceScore): ArrayBuffer[Array[Double]] = {
+  def compute(data: RDD[Array[Double]], skylineObj: SkylineOperator, dominanceScore: DominanceScore): ArrayBuffer[PointWithDomScore] = {
 
     var dataRDD = data
 
@@ -23,10 +23,8 @@ class STD_Algorithm(sc: SparkContext, k: Int) extends Serializable {
     // Store skyline points in an Array and sort them by their domination score
     var sortedArray: ArrayBuffer[PointWithDomScore] = ArrayBuffer[PointWithDomScore]()
     sortedArray = skylineWithDomScore.sortWith(_.dominanceScore > _.dominanceScore)
-    println("Sorted Skyline with dominance: ")
-    sortedArray.foreach(point => println(point.p.mkString(","),"Dominates",",", point.dominanceScore,",","points"))
 
-    val top_k_Points: ArrayBuffer[Array[Double]] = new ArrayBuffer[Array[Double]]()
+    val top_k_Points: ArrayBuffer[PointWithDomScore] = new ArrayBuffer[PointWithDomScore]()
 
     val loop = new Breaks
 
@@ -37,7 +35,7 @@ class STD_Algorithm(sc: SparkContext, k: Int) extends Serializable {
         // Pick up the point with the highest domination score
         val topK: PointWithDomScore = sortedArray.remove(0)
         // Append it to to ArrayBuffer which contains to top-k Points
-        top_k_Points.append(topK.p)
+        top_k_Points.append(topK)
         // Remove it from the dataRDD
         dataRDD = dataRDD.filter(point => !(topK.p sameElements point))
 
